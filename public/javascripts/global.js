@@ -57,6 +57,7 @@ function visa(){
   $.ajax({
     url:'/ordlista',
     type:'GET',
+    data:{skip:0, limit:10},
     success:function(data){
       if(data.length>0){
         if(url.indexOf('nytt-ord') != -1){
@@ -67,6 +68,21 @@ function visa(){
           $('table#ord tbody').append(row);
           $('.radera').on({click:radera});
           $('.redigera').on({click:redigera});
+        
+          if(data.length>10){
+            $('<button id="last">last</button>').appendTo('body').stop().on('click', function(){
+              index--;
+              index = index < 0 ? data.length-1 : index;
+              ord.text(data[index]['word']);
+              console.log(index);
+            })
+            $('<button id="next">next</button>').appendTo('body').stop().on('click', function(){
+              index++;
+              index = index == data.length ? 0 : index;
+              ord.text(data[index]['word']);
+              console.log(index);
+            })
+          }
         }else{
           var data = shuffle(data);
           ord.text(data[index]['word']);
@@ -163,10 +179,8 @@ function save(event){
           $('#message').append('<p>Ordet redigeras!</p>');
           setTimeout(close, 1000);
         }
-    })/*.done(function(){
-      alert('yaaaap!!!');
-    });*/
+    })
   }else {
-    alert("Snälla fyll i alla del!");
+    $('#message').append('Snälla fyll i alla del!');
   }
 }
