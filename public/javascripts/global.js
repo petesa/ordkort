@@ -58,6 +58,7 @@ function visa(){
     url:'/ordlista',
     type:'GET',
     data:{skip:0, limit:10},
+    //------- Just because....
     success:function(data){
       if(data.length>0){
         if(url.indexOf('nytt-ord') != -1){
@@ -68,7 +69,7 @@ function visa(){
           $('table#ord tbody').append(row);
           $('.radera').on({click:radera});
           $('.redigera').on({click:redigera});
-        
+
           if(data.length>10){
             $('<button id="last">last</button>').appendTo('body').stop().on('click', function(){
               index--;
