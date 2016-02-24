@@ -57,33 +57,35 @@ function visa(){
   $.ajax({
     url:'/ordlista',
     type:'GET',
-    data:{skip:0, limit:10},
-    //------- Just because....
     success:function(data){
       if(data.length>0){
         if(url.indexOf('nytt-ord') != -1){
-          var row;
-          $.each(data, function(){
-            row +='<tr><td>'+$(this).get(0).word+'</td><td>'+$(this).get(0).description+'</td><td><button id="r-'+$(this).get(0)._id+'" class="redigera">Redigera</button></td><td><button id="e-'+$(this).get(0)._id+'" class="radera">Radera</button></td></tr>';
-          })
-          $('table#ord tbody').append(row);
-          $('.radera').on({click:radera});
-          $('.redigera').on({click:redigera});
 
           if(data.length>10){
-            $('<button id="last">last</button>').appendTo('body').stop().on('click', function(){
+            $('<button id="last">last</button>').insertAfter('table#ord').stop().on('click', function(){
               index--;
-              index = index < 0 ? data.length-1 : index;
-              ord.text(data[index]['word']);
+              index = index < 0 ? Math.ceil(data.length/10)-1 : index;
+              pag(index, data.length);
               console.log(index);
             })
-            $('<button id="next">next</button>').appendTo('body').stop().on('click', function(){
+            $('<button id="next">next</button>').insertAfter('#last').stop().on('click', function(){
               index++;
-              index = index == data.length ? 0 : index;
-              ord.text(data[index]['word']);
+              index = index == Math.ceil(data.length/10) ? 0 : index;
+              pag(index, data.length);
               console.log(index);
             })
           }
+
+          var row;
+
+          $.each(data, function(i){
+              row +='<tr><td>'+$(this).get(0).word+'</td><td>'+$(this).get(0).description+'</td><td><button id="r-'+$(this).get(0)._id+'" class="redigera">Redigera</button></td><td><button id="e-'+$(this).get(0)._id+'" class="radera">Radera</button></td></tr>';
+          })
+
+          $('table#ord tbody').append(row);
+          $('.radera').on({click:radera});
+          $('.redigera').on({click:redigera});
+          pag(0, data.length);
         }else{
           var data = shuffle(data);
           ord.text(data[index]['word']);
@@ -105,6 +107,25 @@ function visa(){
       }
     }
   })
+}
+
+function pag(index, max){
+  var next = $('#next');
+  var last = $('#last');
+  $('table#ord tr').hide().each(function(i){
+    if(i/10 >= index && i/10 < index+1)
+      $(this).show();
+  })
+
+  if(index >= Math.round(max/10)-1 )
+    next.css({visibility:'hidden'});
+  else
+    next.css({visibility:'visible'});
+
+  if(index == 0)
+    last.css({visibility:'hidden'});
+  else
+    last.css({visibility:'visible'});
 }
 
 function radera(){
