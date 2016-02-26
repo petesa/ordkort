@@ -10,6 +10,22 @@ $(function(){
 function mer(event){
   event.preventDefault();
   $('.ord:last').clone().insertAfter('.ord:last');
+  if($('.ord').length == 2){
+    $('<button class="farre">-</button>').insertBefore('#btnMerOrd');
+    $('.farre').on({click:function(event){
+        event.preventDefault();
+        $('.ord:last').animate({opacity:0},200, function(){
+          $(this).slideUp(200,function(){
+            $(this).remove();
+            if($('.ord').length == 1){
+              $('.farre').remove()
+            }
+          });
+        });
+      }
+    })
+  }
+
 }
 
 function lagg(event){
@@ -30,12 +46,12 @@ function lagg(event){
         dataType:'JSON'
       }).done(function( response ) {
         // Check for successful (blank) response
-        console.log(response.msg);
         if (response.msg === '') {
 
             // Clear the form inputs
-            $('.ord').each().val('');
-            message('New word saved!', true);
+            $('.ord').find('input[type=text]').val('');
+            message('Ord lagt in', true);
+            
             // Update the table
             //populateTable();
 
@@ -59,7 +75,7 @@ function visa(){
     type:'GET',
     success:function(data){
       if(data.length>0){
-        if(url.indexOf('nytt-ord') != -1){
+        if(url.indexOf('admin') != -1){
 
           if(data.length>10){
             $('<button id="last">last</button>').insertAfter('table#ord').stop().on('click', function(){
@@ -112,7 +128,7 @@ function visa(){
 function pag(index, max){
   var next = $('#next');
   var last = $('#last');
-  $('table#ord tr').hide().each(function(i){
+  $('table#ord tbody tr').hide().each(function(i){
     if(i/10 >= index && i/10 < index+1)
       $(this).show();
   })
@@ -130,17 +146,8 @@ function pag(index, max){
 
 function radera(){
   event.preventDefault();
-  var ord = $(this);
-  var id = ord.attr("id").substr(2);
-  $.ajax({
-    url:'radera',
-    type:'DELETE',
-    data:{id:id},
-    success:function(response){
-      message("ordet raderas", true);
-      ord.parents('tr').remove();
-    }
-  })
+  var form = '<form><h4>Är du säker att du vill radera detta ord?</h4><button class="cancel">Avbryt</button><button class="delete">Radera</button></form>';
+  message(form, false, $(this));
 }
 
 function redigera(){
@@ -150,7 +157,7 @@ function redigera(){
   var id = $(this).attr("id").substr(2);
   var beskrivning = row.find('td:nth-child(2)').text();
   var form = '<form><input type="text" name="ord" value="'+ord+'"><input type="text" name="beskrivning" value="'+beskrivning+'"><input type="hidden" name="id" value="'+id+'"><button class="cancel">Cancel</button><button class="save">Save</button></form>';
-  message(form, false);
+  message(form, false, row);
 }
 
 function shuffle(sourceArray) {
@@ -164,7 +171,7 @@ function shuffle(sourceArray) {
     return sourceArray;
 }
 
-function message(text, autoclose){
+function message(text, autoclose, target){
   if($('#message').length == 0)
     $('body').append('<div id="message"/>');
 
@@ -172,7 +179,13 @@ function message(text, autoclose){
   message.css({opacity:0});
   message.html(text).delay(500).animate({opacity:1},200, function(){
     $(this).find('.cancel').on({click:close});
-    $(this).find('.save').on({click:save});
+    $(this).find('.save').on({click:function(event){
+        update(event,target);
+      }
+    });
+    $(this).find('.delete').on({click:function(event){
+        del(event, target);
+    }})
     if(autoclose)
       setTimeout(close,1000);
   });
@@ -184,9 +197,9 @@ function close(event){
   $('#message').animate({opacity:0},200)
 }
 
-function save(event){
+function update(event, row){
   event.preventDefault();
-  var form = $(this).parents('form')
+  var form = $(event.target).parents('form')
   var id = form.find('[name="id"]').val();
   var ord = form.find('[name="ord"]').val();
   var beskrivning = form.find('[name="beskrivning"]').val();
@@ -199,10 +212,46 @@ function save(event){
         dataType:'JSON',
         success:function(response){
           $('#message').append('<p>Ordet redigeras!</p>');
+          row.delay(1000).animate({opacity:0}, function(){
+            row.find('td:nth-child(1)').text(ord);
+            row.find('td:nth-child(2)').text(beskrivning);
+            row.animate({opacity:1})
+          })
           setTimeout(close, 1000);
         }
     })
   }else {
     $('#message').append('Snälla fyll i alla del!');
   }
+}
+
+function del(event, ord){
+  event.preventDefault();
+  var id = ord.attr("id").substr(2);
+  $.ajax({
+    url:'radera',
+    type:'DELETE',
+    data:{id:id},
+    success:function(response){
+      $('#message').text("Ordet raderas");
+      setTimeout(close, 1000);
+      ord.parents('tr').animate({opacity:0}, function(){
+        var height = $(this).outerHeight();
+        var deleted = $(this);
+        deleted.find('td').wrapInner('<div class="sUp"></div>');
+        var pad = deleted.find('td').css('padding');
+        deleted.find('td').css({padding:0})
+        $('.sUp').css({padding:pad}).slideUp();
+
+        var nextRow = deleted.siblings('tr:visible:last').next();
+        nextRow.css({display:'table-row',opacity:0}).find('td').wrapInner('<div class="sDown"></div>');
+
+        $('.sDown').css({display:'none'}).slideDown(function(){
+          deleted.remove();
+          $(this).replaceWith(this.childNodes);
+          nextRow.animate({opacity:1});
+        });
+      });
+    }
+  })
 }

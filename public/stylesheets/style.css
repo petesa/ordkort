@@ -17,3 +17,7 @@ a {
   margin-left:-150px;
   top:200px;
 }
+
+table#ord td{
+  padding:5px;
+}

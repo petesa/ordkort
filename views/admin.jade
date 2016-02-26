@@ -1,0 +1,19 @@
+extends layout
+
+block content
+  h1 Lägg in ett nytt ord
+  a(href="/users/#{username}") Gå tillbacks
+  table#ord
+    thead
+      tr
+        th Ord
+        th Beskrivning
+        th Redigera
+        th Radera
+    tbody
+  form
+    fieldset(class='ord')
+      input(type='text', name="word", placeholder='Skriv ett ord')
+      input(type='text', name="description", placeholder='Skriv en beskrivning')
+    button#btnMerOrd +
+    button#btnLaggOrd Lägg Ord

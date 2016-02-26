@@ -13,8 +13,8 @@ router.get('/:username', isLoggedin, function(req, res, next) {
   res.render('users', { title: 'Ordkort :: '+req.user.username, username:req.user.username});
 });
 
-router.get('/:username/nytt-ord', isLoggedin, function(req, res, next) {
-  res.render('nytt-ord', { title: 'Nytt ord', username:req.user.username });
+router.get('/:username/admin', isLoggedin, function(req, res, next) {
+  res.render('admin', { title: 'Hantera dina ord', username:req.user.username });
 })
 
 router.post('/:username/lagg-ord', isLoggedin, function(req, res) {
@@ -34,6 +34,7 @@ router.post('/:username/lagg-ord', isLoggedin, function(req, res) {
           res.send({response:err});
       }else{
           console.log('saved!');
+          req.body.msg = '';
           res.send(req.body);
       }
     };
