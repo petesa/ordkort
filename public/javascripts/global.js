@@ -49,9 +49,58 @@ function lagg(event){
         if (response.msg === '') {
 
             // Clear the form inputs
+            var alfabet = 'abcdefghijklmnopqrstuvwxyzåäö';
+            var marker, newLine;
+            $(data).each(function(){
+              var nyOrd = this.word;
+              var nyBes = this.description;
+              var id = '';
+              var ordlista = $('table#ord tbody tr td:nth-child(1)')
+              ordlista.each(function(i){
+                var ord = $(this).text().toLowerCase();
+                var nyOrdLC = nyOrd.toLowerCase();
+                var step = 0;
+                if(alfabet.indexOf(nyOrdLC[step]) === alfabet.indexOf(ord[step]))
+                  step ++;
+                if(alfabet.indexOf(nyOrdLC[step]) < alfabet.indexOf(ord[step])){
+                  if(typeof marker == 'undefined')
+                    marker = $(this);
+                }
+                if(typeof marker == 'undefined' && i == ordlista.length-1)
+                  marker = $(this);
+              })
+              var line = marker.parent('tr');
+              line.before('<tr><td>'+nyOrd+'</td><td>'+nyBes+'</td><td><button id="r-'+id+'" class="redigera">Redigera</button></td><td><button id="e-'+id+'" class="radera">Radera</button></td></tr>');
+              newLine = line.prev();
+              newLine.find('.radera').on({click:radera});
+              newLine.find('.redigera').on({click:redigera});
+            })
+
+            if(marker.is(':visible')){
+                var cell = newLine.find('td');
+                var pad = parseInt( cell.css('padding') );
+                var height = cell.height();
+                var last = newLine.siblings(':visible:last');
+                cell.css({padding:0}).wrapInner('<div class="sDown"></div>');
+                last.find('td').css({padding:0}).wrapInner('<div class="sUp"></div>');
+                $('.sUp').animate({opacity:0}, function(){
+                  $(this).animate({height:0}, function(){
+                    last.css({display:'none'}).find('td').css({padding:pad})
+                    $(this).replaceWith(this.childNodes);
+                  })
+                })
+                $('.sDown').css({height:0, padding:pad, opacity:0}).animate({height:height}, function(){
+                  $(this).animate({opacity:1}, function(){
+                    $(this).replaceWith(this.childNodes);
+                    cell.css({padding:pad});
+                  })
+                });
+            }
+
+
             $('.ord').find('input[type=text]').val('');
             message('Ord lagt in', true);
-            
+
             // Update the table
             //populateTable();
 
