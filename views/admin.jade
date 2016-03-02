@@ -2,7 +2,8 @@ extends layout
 
 block content
   h1 Lägg in ett nytt ord
-  a(href="/users/#{username}") Gå tillbacks
+  div#nav
+    a(href="/users/#{username}") Gå tillbacks
   table#ord
     thead
       tr

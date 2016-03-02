@@ -34,7 +34,7 @@ router.post('/:username/lagg-ord', isLoggedin, function(req, res) {
           res.send({response:err});
       }else{
           console.log('saved!');
-          req.body.msg = '';
+          req.body.msg = word;
           res.send(req.body);
       }
     };

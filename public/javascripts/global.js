@@ -1,4 +1,5 @@
 var url = String(window.location);
+var wpp = 10; //Words per page
 $(function(){
   $('#btnLaggOrd').on({'click':lagg})
   $('#btnMerOrd').on({'click':mer})
@@ -32,7 +33,7 @@ function lagg(event){
   event.preventDefault();
   var data = Array();
   $('.ord').each(function(){
-    var word = $(this).find('[name=word]').val();
+    var word = $(this).find('[name=word]').val().toLowerCase();
     var description = $(this).find('[name=description]').val();
     if(word !=='')
       data.push({'word':word, 'description':description});
@@ -46,32 +47,37 @@ function lagg(event){
         dataType:'JSON'
       }).done(function( response ) {
         // Check for successful (blank) response
-        if (response.msg === '') {
-
+        if (typeof response.msg == 'object') {
             // Clear the form inputs
             var alfabet = 'abcdefghijklmnopqrstuvwxyzåäö';
             var marker, newLine;
+            var data = response.msg;
             $(data).each(function(){
               var nyOrd = this.word;
               var nyBes = this.description;
-              var id = '';
+              var id = this._id;
               var ordlista = $('table#ord tbody tr td:nth-child(1)')
               ordlista.each(function(i){
                 var ord = $(this).text().toLowerCase();
-                var nyOrdLC = nyOrd.toLowerCase();
                 var step = 0;
-                if(alfabet.indexOf(nyOrdLC[step]) === alfabet.indexOf(ord[step]))
+                if(alfabet.indexOf(nyOrd[step]) === alfabet.indexOf(ord[step]))
                   step ++;
-                if(alfabet.indexOf(nyOrdLC[step]) < alfabet.indexOf(ord[step])){
+                if(alfabet.indexOf(nyOrd[step]) < alfabet.indexOf(ord[step])){
                   if(typeof marker == 'undefined')
                     marker = $(this);
                 }
                 if(typeof marker == 'undefined' && i == ordlista.length-1)
                   marker = $(this);
               })
-              var line = marker.parent('tr');
-              line.before('<tr><td>'+nyOrd+'</td><td>'+nyBes+'</td><td><button id="r-'+id+'" class="redigera">Redigera</button></td><td><button id="e-'+id+'" class="radera">Radera</button></td></tr>');
-              newLine = line.prev();
+              var lineContents = '<tr><td>'+nyOrd+'</td><td>'+nyBes+'</td><td><button id="r-'+id+'" class="redigera">Redigera</button></td><td><button id="e-'+id+'" class="radera">Radera</button></td></tr>';
+              if(ordlista.length > 1){
+                var line = marker.parent('tr');
+                line.before(lineContents);
+                newLine = line.prev();
+              }else{
+                $('table#ord').append(lineContents);
+                newLine = marker = $('table#ord tbody tr');
+              }
               newLine.find('.radera').on({click:radera});
               newLine.find('.redigera').on({click:redigera});
             })
@@ -82,13 +88,16 @@ function lagg(event){
                 var height = cell.height();
                 var last = newLine.siblings(':visible:last');
                 cell.css({padding:0}).wrapInner('<div class="sDown"></div>');
-                last.find('td').css({padding:0}).wrapInner('<div class="sUp"></div>');
-                $('.sUp').animate({opacity:0}, function(){
-                  $(this).animate({height:0}, function(){
-                    last.css({display:'none'}).find('td').css({padding:pad})
-                    $(this).replaceWith(this.childNodes);
+                var visible = newLine.siblings(':visible').length;
+                if(visible >= wpp){
+                  last.find('td').css({padding:0}).wrapInner('<div class="sUp"></div>');
+                  $('.sUp').animate({opacity:0}, function(){
+                    $(this).animate({height:0}, function(){
+                      last.css({display:'none'}).find('td').css({padding:pad})
+                      $(this).replaceWith(this.childNodes);
+                    })
                   })
-                })
+                }
                 $('.sDown').css({height:0, padding:pad, opacity:0}).animate({height:height}, function(){
                   $(this).animate({opacity:1}, function(){
                     $(this).replaceWith(this.childNodes);
@@ -124,18 +133,18 @@ function visa(){
     type:'GET',
     success:function(data){
       if(data.length>0){
+        $('#forsta').remove();
         if(url.indexOf('admin') != -1){
-
           if(data.length>10){
             $('<button id="last">last</button>').insertAfter('table#ord').stop().on('click', function(){
               index--;
-              index = index < 0 ? Math.ceil(data.length/10)-1 : index;
+              index = index < 0 ? Math.ceil(data.length/wpp)-1 : index;
               pag(index, data.length);
               console.log(index);
             })
             $('<button id="next">next</button>').insertAfter('#last').stop().on('click', function(){
               index++;
-              index = index == Math.ceil(data.length/10) ? 0 : index;
+              index = index == Math.ceil(data.length/wpp) ? 0 : index;
               pag(index, data.length);
               console.log(index);
             })
@@ -144,7 +153,8 @@ function visa(){
           var row;
 
           $.each(data, function(i){
-              row +='<tr><td>'+$(this).get(0).word+'</td><td>'+$(this).get(0).description+'</td><td><button id="r-'+$(this).get(0)._id+'" class="redigera">Redigera</button></td><td><button id="e-'+$(this).get(0)._id+'" class="radera">Radera</button></td></tr>';
+              var ord = capitalize($(this).get(0).word);
+              row +='<tr><td>'+ord+'</td><td>'+$(this).get(0).description+'</td><td><button id="r-'+$(this).get(0)._id+'" class="redigera">Redigera</button></td><td><button id="e-'+$(this).get(0)._id+'" class="radera">Radera</button></td></tr>';
           })
 
           $('table#ord tbody').append(row);
@@ -153,18 +163,18 @@ function visa(){
           pag(0, data.length);
         }else{
           var data = shuffle(data);
-          ord.text(data[index]['word']);
+          ord.text(capitalize(data[index]['word']));
           if(data.length>1){
             $('<button id="last">last</button>').appendTo('body').stop().on('click', function(){
               index--;
               index = index < 0 ? data.length-1 : index;
-              ord.text(data[index]['word']);
+              ord.text(capitalize(data[index]['word']));
               console.log(index);
             })
             $('<button id="next">next</button>').appendTo('body').stop().on('click', function(){
               index++;
               index = index == data.length ? 0 : index;
-              ord.text(data[index]['word']);
+              ord.text(capitalize(data[index]['word']));
               console.log(index);
             })
           }
@@ -178,11 +188,10 @@ function pag(index, max){
   var next = $('#next');
   var last = $('#last');
   $('table#ord tbody tr').hide().each(function(i){
-    if(i/10 >= index && i/10 < index+1)
+    if(i/wpp >= index && i/wpp < index+1)
       $(this).show();
   })
-
-  if(index >= Math.round(max/10)-1 )
+  if(index >= Math.floor(max/wpp) )
     next.css({visibility:'hidden'});
   else
     next.css({visibility:'visible'});
@@ -303,4 +312,8 @@ function del(event, ord){
       });
     }
   })
+}
+
+function capitalize(string){
+  return string.charAt(0).toUpperCase() + string.slice(1);
 }

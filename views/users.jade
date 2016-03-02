@@ -1,7 +1,8 @@
 extends layout
 
 block content
-  a(href="/logout") Logout
-  a(href="/users/#{username}/admin") Hantera dina ord
-  br
+  div#nav
+    a(href="/logout") Logout
+    a(href="/users/#{username}/admin") Hantera dina ord
   h1#ord Du har inga ord än
+  a#forsta(href="/users/#{username}/admin") lägg in ditt först ord
