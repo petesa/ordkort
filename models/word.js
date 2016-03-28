@@ -4,6 +4,7 @@ var Schema = mongoose.Schema;
 var Word = new Schema({
     word: String,
     description: String,
+    image:String,
     user_id:String
 });
 

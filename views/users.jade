@@ -1,8 +1,15 @@
 extends layout
 
 block content
-  div#nav
-    a(href="/logout") Logout
-    a(href="/users/#{username}/admin") Hantera dina ord
-  h1#ord Du har inga ord än
-  a#forsta(href="/users/#{username}/admin") lägg in ditt först ord
+  div#minns
+  div#header
+    img#logo(src="/images/logo.png")
+    ul#nav
+      li
+        a(href="/logout") Logout
+      li
+        a(href="/users/#{username}/admin") Hantera dina ord
+  div#flashcard(class="card")
+    h1#ord Du har inga ord än
+    p#beskrivning Om du hade ett ord, beskrivning skulle visas här
+    a#forsta(href="/users/#{username}/admin") lägg in ditt först ord

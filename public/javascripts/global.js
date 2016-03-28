@@ -32,102 +32,112 @@ function mer(event){
 function lagg(event){
   event.preventDefault();
   var data = Array();
-  $('.ord').each(function(){
-    var word = $(this).find('[name=word]').val().toLowerCase();
-    var description = $(this).find('[name=description]').val();
-    if(word !=='')
-      data.push({'word':word, 'description':description});
-  })
-  //ord = [{ord:'baaahh'},{ord:'boooo'},{ord:'naaaah'}];
-  if(data.length > 0){
-    $.ajax({
-        type: 'POST',
-        data:{data:JSON.stringify(data)},//ord,
-        url: 'lagg-ord',
-        dataType:'JSON'
-      }).done(function( response ) {
-        // Check for successful (blank) response
-        if (typeof response.msg == 'object') {
-            // Clear the form inputs
-            var alfabet = 'abcdefghijklmnopqrstuvwxyzåäö';
-            var marker, newLine;
-            var data = response.msg;
-            $(data).each(function(){
-              var nyOrd = this.word;
-              var nyBes = this.description;
-              var id = this._id;
-              var ordlista = $('table#ord tbody tr td:nth-child(1)')
-              ordlista.each(function(i){
-                var ord = $(this).text().toLowerCase();
-                var step = 0;
-                if(alfabet.indexOf(nyOrd[step]) === alfabet.indexOf(ord[step]))
-                  step ++;
-                if(alfabet.indexOf(nyOrd[step]) < alfabet.indexOf(ord[step])){
-                  if(typeof marker == 'undefined')
+  var ord = $('.ord');
+  var offset = Math.floor(Math.random() * 500);
+  $.ajax({
+    type:'GET',
+    url:'http://api.giphy.com/v1/gifs/search?q=funny&offset='+offset+'&limit='+ord.length+'&api_key=dc6zaTOxFJmzC', // IMPORTANTE!!!! Cambiar llave pública!!
+    dataType:'JSON'
+  }).done(function(response){
+    ord.each(function(){
+      var word = $(this).find('[name=word]').val().toLowerCase();
+      var description = $(this).find('[name=description]').val();
+      var image = response.data[0].images.fixed_height.url;
+      if(word !=='')
+        data.push({'word':word, 'description':description, 'image':image});
+    })
+    if(data.length > 0){
+      $.ajax({
+          type: 'POST',
+          data:{data:JSON.stringify(data)},//ord,
+          url: 'lagg-ord',
+          dataType:'JSON'
+        }).done(function( response ) {
+          // Check for successful (blank) response
+          if (typeof response.msg == 'object') {
+              // Clear the form inputs
+              var alfabet = 'abcdefghijklmnopqrstuvwxyzåäö';
+              var marker, newLine;
+              var data = response.msg;
+              $(data).each(function(){
+                var nyOrd = this.word;
+                var nyBes = this.description;
+                var id = this._id;
+                var ordlista = $('table#ord tbody tr td:nth-child(1)')
+                ordlista.each(function(i){
+                  var ord = $(this).text().toLowerCase();
+                  var step = 0;
+                  if(alfabet.indexOf(nyOrd[step]) === alfabet.indexOf(ord[step]))
+                    step ++;
+                  if(alfabet.indexOf(nyOrd[step]) < alfabet.indexOf(ord[step])){
+                    if(typeof marker == 'undefined')
+                      marker = $(this);
+                  }
+                  if(typeof marker == 'undefined' && i == ordlista.length-1)
                     marker = $(this);
+                })
+                var lineContents = '<tr><td>'+nyOrd+'</td><td>'+nyBes+'</td><td><button id="r-'+id+'" class="redigera">Redigera</button></td><td><button id="e-'+id+'" class="radera">Radera</button></td></tr>';
+                if(ordlista.length > 1){
+                  var line = marker.parent('tr');
+                  line.before(lineContents);
+                  newLine = line.prev();
+                }else{
+                  $('table#ord').append(lineContents);
+                  newLine = marker = $('table#ord tbody tr');
                 }
-                if(typeof marker == 'undefined' && i == ordlista.length-1)
-                  marker = $(this);
+                newLine.find('.radera').on({click:radera});
+                newLine.find('.redigera').on({click:redigera});
               })
-              var lineContents = '<tr><td>'+nyOrd+'</td><td>'+nyBes+'</td><td><button id="r-'+id+'" class="redigera">Redigera</button></td><td><button id="e-'+id+'" class="radera">Radera</button></td></tr>';
-              if(ordlista.length > 1){
-                var line = marker.parent('tr');
-                line.before(lineContents);
-                newLine = line.prev();
-              }else{
-                $('table#ord').append(lineContents);
-                newLine = marker = $('table#ord tbody tr');
-              }
-              newLine.find('.radera').on({click:radera});
-              newLine.find('.redigera').on({click:redigera});
-            })
 
-            if(marker.is(':visible')){
-                var cell = newLine.find('td');
-                var pad = parseInt( cell.css('padding') );
-                var height = cell.height();
-                var last = newLine.siblings(':visible:last');
-                cell.css({padding:0}).wrapInner('<div class="sDown"></div>');
-                var visible = newLine.siblings(':visible').length;
-                if(visible >= wpp){
-                  last.find('td').css({padding:0}).wrapInner('<div class="sUp"></div>');
-                  $('.sUp').animate({opacity:0}, function(){
-                    $(this).animate({height:0}, function(){
-                      last.css({display:'none'}).find('td').css({padding:pad})
-                      $(this).replaceWith(this.childNodes);
+              if(marker.is(':visible')){
+                  var cell = newLine.find('td');
+                  var pad = parseInt( cell.css('padding') );
+                  var height = cell.height();
+                  var last = newLine.siblings(':visible:last');
+                  cell.css({padding:0}).wrapInner('<div class="sDown"></div>');
+                  var visible = newLine.siblings(':visible').length;
+                  if(visible >= wpp){
+                    last.find('td').css({padding:0}).wrapInner('<div class="sUp"></div>');
+                    $('.sUp').animate({opacity:0}, function(){
+                      $(this).animate({height:0}, function(){
+                        last.css({display:'none'}).find('td').css({padding:pad})
+                        $(this).replaceWith(this.childNodes);
+                      })
                     })
-                  })
-                }
-                $('.sDown').css({height:0, padding:pad, opacity:0}).animate({height:height}, function(){
-                  $(this).animate({opacity:1}, function(){
-                    $(this).replaceWith(this.childNodes);
-                    cell.css({padding:pad});
-                  })
-                });
-            }
+                  }
+                  $('.sDown').css({height:0, padding:pad, opacity:0}).animate({height:height}, function(){
+                    $(this).animate({opacity:1}, function(){
+                      $(this).replaceWith(this.childNodes);
+                      cell.css({padding:pad});
+                    })
+                  });
+              }
 
 
-            $('.ord').find('input[type=text]').val('');
-            message('Ord lagt in', true);
+              $('.ord').find('input[type=text]').val('');
+              message('Ord lagt in', true);
 
-            // Update the table
-            //populateTable();
+              // Update the table
+              //populateTable();
 
-        }
-        else {
-            // If something goes wrong, alert the error message that our service returned
-            alert('Error: ' + response.msg);
-            console.log(response.msg);
-        }
-    });
-  }else {
-    alert('Snälla skriv ett ord att lägga till');
-  }
+          }
+          else {
+              // If something goes wrong, alert the error message that our service returned
+              alert('Error: ' + response.msg);
+              console.log(response.msg);
+          }
+      });
+    }else {
+      alert('Snälla skriv ett ord att lägga till');
+    }
+  })
 }
 
 function visa(){
   var index = 0;
   var ord = $('h1#ord');
+  var beskrivning = $('p#beskrivning');
+  var image = $('#minns');
   $.ajax({
     url:'/ordlista',
     type:'GET',
@@ -163,8 +173,37 @@ function visa(){
           pag(0, data.length);
         }else{
           var data = shuffle(data);
+          var flashcard = $("#flashcard");
+          var header = $("#header");
           ord.text(capitalize(data[index]['word']));
-          if(data.length>1){
+          image.css({backgroundImage:'url('+data[index]['image']+')'});
+          beskrivning.text(data[index]['description']);
+          beskrivning.css({visibility:'hidden'});
+          $('<button id="hint">Tips</button>').appendTo(flashcard).on('click',function(){
+            image.animate({opacity:1});
+            flashcard.add(header).animate({backgroundColor:'rgba(255,255,255,0.6)'})
+          })
+
+          $('<button id="show">Vet inte</button>').appendTo(flashcard).on('click', function(){
+            beskrivning.css({visibility:'visible'});
+            $('#nailedit').text('Försök med annat');
+            image.animate({opacity:1});
+            flashcard.add(header).animate({backgroundColor:'rgba(255,255,255,0.6)'})
+          });
+
+          $('<button id="nailedit">Kan det!</button>').appendTo(flashcard).on('click', function(){
+            index++;
+            index = index == data.length ? 0 : index;
+            ord.text(capitalize(data[index]['word']));
+            beskrivning.text(data[index]['description']).css({visibility:'hidden'});
+            flashcard.add(header).animate({backgroundColor:'rgba(255,255,255,1)'})
+            image.animate({opacity:0}, 200, function(){
+              image.css({backgroundImage:'url('+(data[index]['image'])+')'});
+            })
+            $(this).text('Kan det!');
+          })
+
+          /*if(data.length>1){
             $('<button id="last">last</button>').appendTo('body').stop().on('click', function(){
               index--;
               index = index < 0 ? data.length-1 : index;
@@ -177,7 +216,7 @@ function visa(){
               ord.text(capitalize(data[index]['word']));
               console.log(index);
             })
-          }
+          }*/
         }
       }
     }

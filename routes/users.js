@@ -10,7 +10,7 @@ router.get('/', isLoggedin, function(req, res, next) {
 });
 
 router.get('/:username', isLoggedin, function(req, res, next) {
-  res.render('users', { title: 'Ordkort :: '+req.user.username, username:req.user.username});
+  res.render('users', { title: 'Minns :: '+req.user.username, username:req.user.username});
 });
 
 router.get('/:username/admin', isLoggedin, function(req, res, next) {

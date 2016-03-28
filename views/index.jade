@@ -1,9 +1,9 @@
 extends layout
 
 block content
-  .container
-    h1 Login Page
-    p.lead Say something worthwhile here.
+  .card
+    h1 Välkommen
+    p.lead Först måste du logga in.
     br
     form(role='form', action="/",method="post", style='max-width: 300px;')
       .form-group
@@ -11,8 +11,6 @@ block content
       .form-group
         input.form-control(type='password', name="password", placeholder='Password')
       button.btn.btn-default(type='submit') Submit
-      a(href='/')
-        button.btn.btn-primary(type="button") Cancel
-      br
+      button.btn.btn-primary(type="button") Cancel
       h4= info
     a(href="/register") Register
